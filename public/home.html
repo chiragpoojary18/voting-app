@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voting App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4ff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; max-width: 480px; width: 90%; }
+    h1 { font-size: 2rem; color: #1a1a2e; margin-bottom: 10px; }
+    p { color: #666; margin-bottom: 30px; }
+    .btn { display: inline-block; margin: 8px; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #4361ee; color: white; }
+    .btn-secondary { background: #e0e7ff; color: #4361ee; }
+    .btn-outline { background: transparent; border: 2px solid #4361ee; color: #4361ee; }
+    #user-bar { margin-bottom: 20px; font-size: 0.9rem; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🗳️ Voting App</h1>
+    <p>A simple election system. Register as an elector or contestant, then cast your vote.</p>
+    <div id="user-bar"></div>
+    <div id="actions">
+      <a href="/register" class="btn btn-primary">Register</a>
+      <a href="/login" class="btn btn-secondary">Login</a>
+      <a href="/results" class="btn btn-outline">View Results</a>
+    </div>
+  </div>
+
+  <script>
+    fetch("/auth/me")
+      .then(r => r.json())
+      .then(user => {
+        document.getElementById("user-bar").innerHTML =
+          `👋 Logged in as <strong>${user.name}</strong> (${user.role})`;
+        document.getElementById("actions").innerHTML = `
+          ${user.role === "elector" ? '<a href="/vote" class="btn btn-primary">Cast Vote</a>' : ""}
+          <a href="/results" class="btn btn-outline">View Results</a>
+          <button onclick="logout()" class="btn btn-secondary">Logout</button>
+        `;
+      })
+      .catch(() => {}); // not logged in, show default
+
+    function logout() {
+      fetch("/auth/logout", { method: "POST" })
+        .then(() => location.reload());
+    }
+  </script>
+</body>
+</html>

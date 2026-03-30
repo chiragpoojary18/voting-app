@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cast Your Vote</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4ff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 90%; max-width: 480px; }
+    h1 { font-size: 1.6rem; color: #1a1a2e; margin-bottom: 6px; text-align: center; }
+    .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 24px; }
+    .contestant-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .contestant-option { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 2px solid #e0e7ff; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .contestant-option:hover { border-color: #4361ee; background: #f0f4ff; }
+    .contestant-option.selected { border-color: #4361ee; background: #e0e7ff; }
+    .contestant-option input[type="radio"] { accent-color: #4361ee; width: 18px; height: 18px; }
+    .contestant-name { font-weight: bold; color: #1a1a2e; }
+    .contestant-email { font-size: 0.8rem; color: #888; }
+    button { width: 100%; padding: 12px; background: #4361ee; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    button:hover { background: #3451d1; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .msg { margin-top: 14px; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; display: none; }
+    .msg.success { background: #d1fae5; color: #065f46; display: block; }
+    .msg.error { background: #fee2e2; color: #991b1b; display: block; }
+    .msg.info { background: #dbeafe; color: #1e40af; display: block; }
+    .nav { text-align: center; margin-top: 16px; font-size: 0.9rem; }
+    .nav a { color: #4361ee; text-decoration: none; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🗳️ Cast Your Vote</h1>
+    <p class="subtitle">Select a contestant and submit your vote. You can only vote once.</p>
+
+    <div class="contestant-list" id="contestants">
+      <p style="text-align:center;color:#888;">Loading contestants...</p>
+    </div>
+
+    <button id="vote-btn" onclick="castVote()" disabled>Submit Vote</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="nav">
+      <a href="/">← Home</a>
+      <a href="/results">View Results</a>
+    </div>
+  </div>
+
+  <script>
+    let selectedId = null;
+
+    // Check if already voted
+    fetch("/vote/my-vote")
+      .then(r => {
+        if (r.status === 401) { location.href = "/login"; throw new Error(); }
+        return r.json();
+      })
+      .then(data => {
+        if (data.voted) {
+          document.getElementById("contestants").innerHTML = "";
+          document.getElementById("vote-btn").disabled = true;
+          const msg = document.getElementById("msg");
+          msg.className = "msg info";
+          msg.textContent = `✅ You already voted for ${data.contestant.name}.`;
+        } else {
+          loadContestants();
+        }
+      })
+      .catch(() => {});
+
+    function loadContestants() {
+      fetch("/vote/contestants")
+        .then(r => r.json())
+        .then(list => {
+          const container = document.getElementById("contestants");
+          if (list.length === 0) {
+            container.innerHTML = "<p style='text-align:center;color:#888;'>No contestants registered yet.</p>";
+            return;
+          }
+          container.innerHTML = list.map(c => `
+            <label class="contestant-option" id="opt-${c._id}" onclick="select('${c._id}')">
+              <input type="radio" name="contestant" value="${c._id}" />
+              <div>
+                <div class="contestant-name">${c.name}</div>
+                <div class="contestant-email">${c.email}</div>
+              </div>
+            </label>
+          `).join("");
+        });
+    }
+
+    function select(id) {
+      document.querySelectorAll(".contestant-option").forEach(el => el.classList.remove("selected"));
+      document.getElementById("opt-" + id).classList.add("selected");
+      selectedId = id;
+      document.getElementById("vote-btn").disabled = false;
+    }
+
+    async function castVote() {
+      if (!selectedId) return;
+      const msg = document.getElementById("msg");
+      msg.className = "msg";
+
+      const res = await fetch("/vote/cast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contestantId: selectedId }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        msg.className = "msg success";
+        msg.textContent = data.message;
+        document.getElementById("vote-btn").disabled = true;
+        document.querySelectorAll(".contestant-option").forEach(el => el.style.pointerEvents = "none");
+        setTimeout(() => location.href = "/results", 1500);
+      } else {
+        msg.className = "msg error";
+        msg.textContent = data.error;
+      }
+    }
+  </script>
+</body>
+</html>
