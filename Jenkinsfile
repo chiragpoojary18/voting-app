@@ -3,23 +3,46 @@ pipeline {
 
     stages {
 
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Check Files') {
             steps {
                 sh 'ls -la'
             }
         }
 
-        stage('Check Node') {
+        stage('Check Node and NPM') {
             steps {
                 sh 'node --version'
                 sh 'npm --version'
             }
         }
 
-        stage('Run App') {
+        stage('Install Dependencies') {
             steps {
-                sh 'node app.js'
+                sh 'npm install'
             }
+        }
+
+        stage('Run Application') {
+            steps {
+                sh 'node server.js &'
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo 'Pipeline executed successfully'
+        }
+
+        failure {
+            echo 'Pipeline failed'
         }
     }
 }
