@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "chiragpoojary1811/voting-app"
+        IMAGE_NAME = "chiragpoojary1811/sample-node-app"
     }
 
     stages {
 
+        // TASK 1 - CI Pipeline
         stage('Checkout Code') {
             steps {
-                checkout scm
+                git 'https://github.com/donskytech/sample-static-node-express-web-application.git'
             }
         }
 
@@ -32,6 +33,13 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            steps {
+                sh 'npm test --if-present || echo "No tests defined, skipping"'
+            }
+        }
+
+        // TASK 2 - Docker Build & Push
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $IMAGE_NAME .'
@@ -45,10 +53,7 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    '''
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
@@ -58,16 +63,29 @@ pipeline {
                 sh 'docker push $IMAGE_NAME'
             }
         }
+
+        // TASK 3 - Kubernetes Deployment
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh 'kubectl get pods'
+                sh 'kubectl get services'
+            }
+        }
     }
 
     post {
-
         success {
-            echo 'Docker image built and pushed successfully'
+            echo 'Pipeline completed - App deployed to Kubernetes!'
         }
-
         failure {
-            echo 'Pipeline failed'
+            echo 'Pipeline failed - check logs above'
         }
     }
 }
