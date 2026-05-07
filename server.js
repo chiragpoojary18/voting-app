@@ -38,6 +38,6 @@ app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public/login.
 app.get("/vote", (req, res) => res.sendFile(path.join(__dirname, "public/vote.html")));
 app.get("/results", (req, res) => res.sendFile(path.join(__dirname, "public/results.html")));
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Server running on port 3000');
 });
