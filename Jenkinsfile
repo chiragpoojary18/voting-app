@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "username/voting-app"
+        IMAGE_NAME = "chiragpoojary18/voting-app"
     }
 
     stages {
@@ -10,6 +10,19 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Check Files') {
+            steps {
+                sh 'ls -la'
+            }
+        }
+
+        stage('Check Node and NPM') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
             }
         }
 
@@ -33,7 +46,9 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
 
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
                 }
             }
         }
@@ -46,8 +61,9 @@ pipeline {
     }
 
     post {
+
         success {
-            echo 'Docker image pushed successfully'
+            echo 'Docker image built and pushed successfully'
         }
 
         failure {
