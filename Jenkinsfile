@@ -29,10 +29,14 @@ pipeline {
         }
 
         stage('Run Application') {
-            steps {
-                sh 'node server.js &'
-            }
-        }
+	   steps {
+		sh '''
+	nohup node server.js > app.log 2>&1 &
+	sleep 5
+	cat app.log
+	'''
+    }
+}
     }
 
     post {
