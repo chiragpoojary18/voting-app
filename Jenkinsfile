@@ -31,10 +31,14 @@ pipeline {
         stage('Run Application') {
     steps {
         sh '''
-            export BUILD_ID=dontKillMe
+            BUILD_ID=dontKillMe \
             nohup node server.js > app.log 2>&1 &
+            
             sleep 5
+            
             cat app.log
+            
+            ps aux | grep node
         '''
     }
 }
