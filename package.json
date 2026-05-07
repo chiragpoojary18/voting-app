@@ -1,10 +1,11 @@
 {
   "name": "voting-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "Simple voting app where we can register as candidate or voter and cast vote to the candidate of our choice.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +15,14 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.3.3"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chiragpoojary18/voting-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chiragpoojary18/voting-app/issues"
+  },
+  "homepage": "https://github.com/chiragpoojary18/voting-app#readme"
 }
