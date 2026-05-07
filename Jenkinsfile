@@ -29,12 +29,13 @@ pipeline {
         }
 
         stage('Run Application') {
-	   steps {
-		sh '''
-	nohup node server.js > app.log 2>&1 &
-	sleep 5
-	cat app.log
-	'''
+    steps {
+        sh '''
+            export BUILD_ID=dontKillMe
+            nohup node server.js > app.log 2>&1 &
+            sleep 5
+            cat app.log
+        '''
     }
 }
     }
