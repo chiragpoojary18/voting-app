@@ -10,7 +10,7 @@ pipeline {
         // TASK 1 - CI Pipeline
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/donskytech/sample-static-node-express-web-application.git'
+                checkout scm
             }
         }
 
