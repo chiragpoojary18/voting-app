@@ -1,24 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "username/voting-app"
+    }
+
     stages {
 
         stage('Checkout Code') {
             steps {
                 checkout scm
-            }
-        }
-
-        stage('Check Files') {
-            steps {
-                sh 'ls -la'
-            }
-        }
-
-        stage('Check Node and NPM') {
-            steps {
-                sh 'node --version'
-                sh 'npm --version'
             }
         }
 
@@ -28,26 +19,35 @@ pipeline {
             }
         }
 
-        stage('Run Application') {
-    steps {
-        sh '''
-            BUILD_ID=dontKillMe \
-            nohup node server.js > app.log 2>&1 &
-            
-            sleep 5
-            
-            cat app.log
-            
-            ps aux | grep node
-        '''
-    }
-}
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh 'docker push $IMAGE_NAME'
+            }
+        }
     }
 
     post {
-
         success {
-            echo 'Pipeline executed successfully'
+            echo 'Docker image pushed successfully'
         }
 
         failure {
